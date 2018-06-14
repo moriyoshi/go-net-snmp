@@ -69,7 +69,7 @@ func StringToOid(oidStr string) (OID, error) {
 func walk(oid OID, t *C.struct_tree) (retval []*C.struct_tree) {
 	for _, v := range oid {
 		for ; t != nil; t = t.next_peer {
-			if t.subid == C.oid(v) {
+			if C.oid(t.subid) == C.oid(v) {
 				retval = append(retval, t)
 				t = t.child_list
 				break
@@ -122,8 +122,10 @@ func AppendAbbreviatedName(buf []byte, oid OID) []byte {
 	l := len(nodes)
 	if l > 0 {
 		n := nodes[l-1]
-		buf = append(buf, []byte(n.Module)...)
-		buf = append(buf, ':', ':')
+		if n.Module != "" {
+			buf = append(buf, []byte(n.Module)...)
+			buf = append(buf, ':', ':')
+		}
 		buf = append(buf, []byte(n.Label)...)
 	}
 	for i, v := range oid[l:] {
