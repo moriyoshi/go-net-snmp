@@ -22,6 +22,7 @@
 package gonetsnmp
 
 import (
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -34,18 +35,31 @@ func TestMain(m *testing.M) {
 }
 
 func TestStringToOID(t *testing.T) {
-	oid, err := StringToOid("1.3.6.1.4.1.4")
+	oid, err := NewOid("1.3.6.1.4.1.4")
 	if assert.NoError(t, err) {
 		assert.Equal(t, OID{1, 3, 6, 1, 4, 1, 4}, oid)
 	}
 }
 
 func TestOIDToString(t *testing.T) {
-	assert.Equal(t, []byte("1.3.6.1.4.1.4"), OidToString(OID{1, 3, 6, 1, 4, 1, 4}))
+	assert.Equal(t, "1.3.6.1.4.1.4", OID{1, 3, 6, 1, 4, 1, 4}.String())
+}
+
+func TestMarshalJSON(t *testing.T) {
+	if result, err := json.Marshal(OID{1, 3, 6, 1, 4, 1, 4}); assert.NoError(t, err) {
+		assert.Equal(t, []byte("\"1.3.6.1.4.1.4\""), result)
+	}
+}
+
+func TestUnmarshalJSON(t *testing.T) {
+	var result OID
+	if err := json.Unmarshal([]byte("\"1.3.6.1.4.1.4\""), &result); assert.NoError(t, err) {
+		assert.Equal(t, OID{1, 3, 6, 1, 4, 1, 4}, result)
+	}
 }
 
 func TestGetAbbreviatedName(t *testing.T) {
-	oid, err := StringToOid("1.3.6.1.4.1")
+	oid, err := NewOid("1.3.6.1.4.1")
 	if assert.NoError(t, err) {
 		assert.Equal(t, "SNMPv2-SMI::enterprises", GetAbbreviatedName(oid))
 	}

@@ -28,6 +28,7 @@ package gonetsnmp
 import "C"
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -35,8 +36,7 @@ import (
 
 type OID []int
 
-func OidToString(oid OID) []byte {
-	var buf []byte
+func (oid OID) AppendBytes(buf []byte) []byte {
 	for i, v := range oid {
 		if i > 0 {
 			buf = append(buf, '.')
@@ -46,7 +46,34 @@ func OidToString(oid OID) []byte {
 	return buf
 }
 
-func StringToOid(oidStr string) (OID, error) {
+func (oid OID) String() string {
+	var buf []byte
+	buf = oid.AppendBytes(buf)
+	return string(buf)
+}
+
+func (oid *OID) UnmarshalJSON(data []byte) error {
+	var v string
+	err := json.Unmarshal(data, &v)
+	if err != nil {
+		return err
+	}
+	*oid, err = NewOid(v)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (oid OID) MarshalJSON() ([]byte, error) {
+	var buf []byte
+	buf = append(buf, '"')
+	buf = oid.AppendBytes(buf)
+	buf = append(buf, '"')
+	return buf, nil
+}
+
+func NewOid(oidStr string) (OID, error) {
 	s := strings.Split(oidStr, ".")
 	var buf OID
 	for i, sv := range s {
