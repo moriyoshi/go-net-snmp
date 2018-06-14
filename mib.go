@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 type OID []int
@@ -110,11 +111,17 @@ func walk(oid OID, t *C.struct_tree) (retval []*C.struct_tree) {
 }
 
 func InitMIB() {
-	C.init_mib()
+	C.netsnmp_init_mib()
 }
 
 func ShutdownMIB() {
 	C.shutdown_mib()
+}
+
+func AddMIBDir(dir string) {
+	s := C.CString(dir)
+	defer C.free(unsafe.Pointer(s))
+	C.add_mibdir(s)
 }
 
 func ReadAllMIBs() {
